@@ -1,40 +1,48 @@
 const { verifyKey } = require('discord-interactions');
+const getRawBody = require('raw-body');
 
-// Verification middleware
-const verifyDiscordRequest = (clientKey) => {
-  return function (req, res, buf) {
-    const signature = req.get('X-Signature-Ed25519');
-    const timestamp = req.get('X-Signature-Timestamp');
+// Verification function
+const verifyDiscordRequest = async (req, res) => {
+  const signature = req.headers['x-signature-ed25519'];
+  const timestamp = req.headers['x-signature-timestamp'];
+  const rawBody = await getRawBody(req);
 
-    const isValidRequest = verifyKey(buf, signature, timestamp, clientKey);
-    if (!isValidRequest) {
-      res.status(401).send('Bad request signature');
-      throw new Error('Bad request signature');
-    }
-  };
+  if (!signature || !timestamp || !rawBody) {
+    return false;
+  }
+
+  try {
+    return verifyKey(rawBody, signature, timestamp, process.env.DISCORD_PUBLIC_KEY);
+  } catch (err) {
+    return false;
+  }
 };
 
 module.exports = async (req, res) => {
-  // Verify the request is from Discord
-  if (!process.env.DISCORD_PUBLIC_KEY) {
-    return res.status(500).json({ error: 'Public key not configured' });
+  // Verify the request
+  const isValid = await verifyDiscordRequest(req, res);
+  if (!isValid) {
+    return res.status(401).json({ error: 'Invalid request signature' });
   }
 
+  // Parse the request body
+  const body = JSON.parse(req.body.toString());
+
   // Handle Discord's verification challenge
-  if (req.body.type === 1) {
+  if (body.type === 1) {
     return res.json({ type: 1 });
   }
 
   // Handle commands
-  if (req.body.type === 2) {
-    const { data } = req.body;
+  if (body.type === 2) {
+    const { data } = body;
     
     switch (data.name) {
       case 'hello':
         return res.json({
           type: 4,
           data: {
-            content: `Hello ${req.body.member.user.username}!`
+            content: `Hello ${body.member.user.username}!`
           }
         });
       
