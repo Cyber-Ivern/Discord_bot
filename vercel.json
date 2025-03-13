@@ -5,5 +5,12 @@
       "memory": 1024,
       "maxDuration": 10
     }
-  }
+  },
+  "routes": [
+    {
+      "src": "/api/discord",
+      "methods": ["POST"],
+      "dest": "/api/discord.js"
+    }
+  ]
 }

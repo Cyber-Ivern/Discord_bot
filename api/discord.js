@@ -18,7 +18,18 @@ const verifyDiscordRequest = async (req, res) => {
   }
 };
 
-module.exports = async (req, res) => {
+export const config = {
+  api: {
+    bodyParser: false,
+  },
+};
+
+export default async function handler(req, res) {
+  // Only accept POST requests
+  if (req.method !== 'POST') {
+    return res.status(405).json({ error: 'Method not allowed' });
+  }
+
   // Verify the request
   const isValid = await verifyDiscordRequest(req, res);
   if (!isValid) {
@@ -52,7 +63,7 @@ module.exports = async (req, res) => {
   }
 
   return res.status(400).json({ error: 'Unknown type' });
-};
+}
 
     
 
