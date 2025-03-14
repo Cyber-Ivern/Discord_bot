@@ -15,10 +15,20 @@ function handleCommand(message) {
   const commandHandler = commands[name];
   
   if (!commandHandler) {
-    throw new Error('Unknown command');
+    throw new Error(`Unknown command: ${name}`);
   }
   
   return commandHandler(message);
 }
 
-module.exports = handleCommand; 
+// Export the commands object for registration
+module.exports = {
+  handleCommand,
+  commands: [
+    {
+      name: 'hello',
+      description: 'Says hello to the user'
+    }
+    // Add more command definitions here
+  ]
+}; 

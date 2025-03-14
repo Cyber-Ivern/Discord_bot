@@ -1,26 +1,25 @@
 const { REST, Routes } = require('discord.js');
 require('dotenv').config();
 
-const commands = [
-  {
-    name: 'hello',
-    description: 'Says hello to the user'
-  }
-];
+// Import our commands
+const { commands } = require('./api/utils/commands');
 
+// Create REST instance
 const rest = new REST({ version: '10' }).setToken(process.env.DISCORD_TOKEN);
 
-(async () => {
+async function registerCommands() {
   try {
-    console.log('Registering slash commands...');
+    console.log('Started refreshing application (/) commands.');
 
     await rest.put(
       Routes.applicationCommands(process.env.DISCORD_CLIENT_ID),
       { body: commands }
     );
 
-    console.log('Successfully registered commands!');
+    console.log('Successfully reloaded application (/) commands.');
   } catch (error) {
-    console.error(error);
+    console.error('Error registering commands:', error);
   }
-})();
+}
+
+registerCommands();
