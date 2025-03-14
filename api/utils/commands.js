@@ -24,10 +24,12 @@ function handleCommand(message) {
 // Export the commands object for registration
 module.exports = {
   handleCommand,
+  // Command definitions in the format Discord expects
   commands: [
     {
       name: 'hello',
-      description: 'Says hello to the user'
+      description: 'Says hello to the user',
+      type: 1  // CHAT_INPUT type
     }
     // Add more command definitions here
   ]
