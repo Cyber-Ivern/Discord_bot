@@ -1,6 +1,13 @@
 const { REST, Routes } = require('discord.js');
 require('dotenv').config();
 
+// Debug: Check if .env is being loaded
+console.log('Environment variables loaded:', {
+  tokenExists: !!process.env.DISCORD_TOKEN,
+  clientIdExists: !!process.env.DISCORD_CLIENT_ID,
+  publicKeyExists: !!process.env.DISCORD_PUBLIC_KEY
+});
+
 // Import our commands
 const { commands } = require('./api/utils/commands');
 
@@ -15,6 +22,10 @@ async function registerCommands() {
 
     // Check if environment variables are set
     if (!process.env.DISCORD_TOKEN || !process.env.DISCORD_CLIENT_ID) {
+      console.error('Missing variables:', {
+        token: !process.env.DISCORD_TOKEN ? 'missing' : 'exists',
+        clientId: !process.env.DISCORD_CLIENT_ID ? 'missing' : 'exists'
+      });
       throw new Error('Missing required environment variables');
     }
 
