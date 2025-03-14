@@ -1,19 +1,12 @@
-const { InteractionType, InteractionResponseType, verifyKey } = require('discord-interactions');
+const { InteractionType } = require('discord-interactions');
+const verifyDiscordRequest = require('./utils/verifyDiscord');
+const handleCommand = require('./utils/commands');
 
-async function verify(req) {
-  const signature = req.headers['x-signature-ed25519'];
-  const timestamp = req.headers['x-signature-timestamp'];
-  const body = await req.text();
-
-  const isValidRequest = verifyKey(
-    body,
-    signature,
-    timestamp,
-    process.env.DISCORD_PUBLIC_KEY
-  );
-
-  return { isValidRequest, body };
-}
+export const config = {
+  api: {
+    bodyParser: false,
+  },
+};
 
 module.exports = async (req, res) => {
   if (req.method !== 'POST') {
@@ -21,44 +14,30 @@ module.exports = async (req, res) => {
   }
 
   try {
-    const { isValidRequest, body } = await verify(req);
+    const verification = await verifyDiscordRequest(req);
     
-    if (!isValidRequest) {
+    if (!verification.isValidRequest) {
       return res.status(401).send('Invalid signature');
     }
 
-    const message = JSON.parse(body);
-
-    if (message.type === InteractionType.PING) {
-      return res.json({
-        type: InteractionResponseType.PONG
-      });
+    // Handle Discord's verification challenge
+    if (verification.isPing) {
+      return res.json(verification.response);
     }
 
-    if (message.type === InteractionType.APPLICATION_COMMAND) {
-      const { name } = message.data;
-
-      if (name === 'hello') {
-        return res.json({
-          type: InteractionResponseType.CHANNEL_MESSAGE_WITH_SOURCE,
-          data: {
-            content: `Hello ${message.member.user.username}!`,
-          },
-        });
-      }
+    // Handle commands
+    if (verification.message.type === InteractionType.APPLICATION_COMMAND) {
+      const response = handleCommand(verification.message);
+      return res.json(response);
     }
 
-    return res.status(400).send('Unknown type');
+    return res.status(400).send('Unknown interaction type');
   } catch (err) {
     console.error('Error processing request:', err);
-    return res.status(500).send('Internal server error');
+    return res.status(500).json({ 
+      error: err.message || 'Internal server error'
+    });
   }
-};
-
-export const config = {
-  api: {
-    bodyParser: false,
-  },
 };
 
     
