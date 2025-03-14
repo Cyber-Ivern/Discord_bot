@@ -3,7 +3,10 @@ const { verifyKey, InteractionType, InteractionResponseType } = require('discord
 async function verifyDiscordRequest(req) {
   const signature = req.headers['x-signature-ed25519'];
   const timestamp = req.headers['x-signature-timestamp'];
-  const body = await req.text();
+  
+  // Handle raw body for Vercel
+  const rawBody = req.body;
+  const body = JSON.stringify(rawBody);
 
   const isValidRequest = verifyKey(
     body,
@@ -18,7 +21,8 @@ async function verifyDiscordRequest(req) {
     };
   }
 
-  const message = JSON.parse(body);
+  // Since we already have the parsed body, no need to parse again
+  const message = rawBody;
 
   // Handle Discord's ping-pong verification challenge
   if (message.type === InteractionType.PING) {

@@ -2,12 +2,6 @@ const { InteractionType } = require('discord-interactions');
 const verifyDiscordRequest = require('./utils/verifyDiscord');
 const handleCommand = require('./utils/commands');
 
-export const config = {
-  api: {
-    bodyParser: false,
-  },
-};
-
 module.exports = async (req, res) => {
   if (req.method !== 'POST') {
     return res.status(405).send('Method not allowed');
