@@ -2,13 +2,14 @@ const { InteractionType } = require('discord-interactions');
 const verifyDiscordRequest = require('./utils/verifyDiscord');
 const handleCommand = require('./utils/commands');
 
-export const config = {
-  api: {
-    bodyParser: false,
-  },
-};
-
 module.exports = async (req, res) => {
+  // Log incoming request details (helpful for debugging)
+  console.log('Received request:', {
+    method: req.method,
+    headers: req.headers,
+    body: req.body
+  });
+
   if (req.method !== 'POST') {
     return res.status(405).send('Method not allowed');
   }
@@ -17,11 +18,12 @@ module.exports = async (req, res) => {
     const verification = await verifyDiscordRequest(req);
     
     if (!verification.isValidRequest) {
-      return res.status(401).send('Invalid signature');
+      return res.status(401).send('Invalid request signature');
     }
 
     // Handle Discord's verification challenge
     if (verification.isPing) {
+      console.log('Responding to ping challenge');
       return res.json(verification.response);
     }
 
@@ -39,7 +41,6 @@ module.exports = async (req, res) => {
     });
   }
 };
-
     
 
     
