@@ -1,6 +1,6 @@
 const { InteractionType } = require('discord-interactions');
 const verifyDiscordRequest = require('./utils/verifyDiscord');
-const handleCommand = require('./utils/commands');
+const { handleCommand } = require('./utils/commands');
 
 module.exports = async (req, res) => {
   // Log incoming request details (helpful for debugging)
@@ -29,6 +29,7 @@ module.exports = async (req, res) => {
 
     // Handle commands
     if (verification.message.type === InteractionType.APPLICATION_COMMAND) {
+      console.log('Handling command:', verification.message.data.name);
       const response = handleCommand(verification.message);
       return res.json(response);
     }
