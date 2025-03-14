@@ -1,9 +1,13 @@
 const { verifyKey, InteractionType, InteractionResponseType } = require('discord-interactions');
 
 async function verifyDiscordRequest(req) {
-  const signature = req.get['x-signature-ed25519'];
-  const timestamp = req.get['x-signature-timestamp'];
-  const body = await req.rawBody;
+
+  const signature = req.headers['x-signature-ed25519'];
+  const timestamp = req.headers['x-signature-timestamp'];
+
+  const rawBody = req.body;
+  const body = json.stringify(rawBody);
+
 
   const isValidRequest = verifyKey(
     body,
@@ -18,7 +22,8 @@ async function verifyDiscordRequest(req) {
     };
   }
 
-  const message = JSON.parse(body);
+  // Since we already have the parsed body, no need to parse again
+  const message = rawBody;
 
   // Handle Discord's ping-pong verification challenge
   if (message.type === InteractionType.PING) {
@@ -40,3 +45,4 @@ async function verifyDiscordRequest(req) {
 }
 
 module.exports = verifyDiscordRequest; 
+
