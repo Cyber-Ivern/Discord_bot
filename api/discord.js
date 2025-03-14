@@ -1,20 +1,57 @@
-const { verifyKey } = require('discord-interactions');
-const getRawBody = require('raw-body');
+const { InteractionType, InteractionResponseType, verifyKey } = require('discord-interactions');
 
-// Verification function
-const verifyDiscordRequest = async (req, res) => {
+async function verify(req) {
   const signature = req.headers['x-signature-ed25519'];
   const timestamp = req.headers['x-signature-timestamp'];
-  const rawBody = await getRawBody(req);
+  const body = await req.text();
 
-  if (!signature || !timestamp || !rawBody) {
-    return false;
+  const isValidRequest = verifyKey(
+    body,
+    signature,
+    timestamp,
+    process.env.DISCORD_PUBLIC_KEY
+  );
+
+  return { isValidRequest, body };
+}
+
+module.exports = async (req, res) => {
+  if (req.method !== 'POST') {
+    return res.status(405).send('Method not allowed');
   }
 
   try {
-    return verifyKey(rawBody, signature, timestamp, process.env.DISCORD_PUBLIC_KEY);
+    const { isValidRequest, body } = await verify(req);
+    
+    if (!isValidRequest) {
+      return res.status(401).send('Invalid signature');
+    }
+
+    const message = JSON.parse(body);
+
+    if (message.type === InteractionType.PING) {
+      return res.json({
+        type: InteractionResponseType.PONG
+      });
+    }
+
+    if (message.type === InteractionType.APPLICATION_COMMAND) {
+      const { name } = message.data;
+
+      if (name === 'hello') {
+        return res.json({
+          type: InteractionResponseType.CHANNEL_MESSAGE_WITH_SOURCE,
+          data: {
+            content: `Hello ${message.member.user.username}!`,
+          },
+        });
+      }
+    }
+
+    return res.status(400).send('Unknown type');
   } catch (err) {
-    return false;
+    console.error('Error processing request:', err);
+    return res.status(500).send('Internal server error');
   }
 };
 
@@ -23,47 +60,6 @@ export const config = {
     bodyParser: false,
   },
 };
-
-export default async function handler(req, res) {
-  // Only accept POST requests
-  if (req.method !== 'POST') {
-    return res.status(405).json({ error: 'Method not allowed' });
-  }
-
-  // Verify the request
-  const isValid = await verifyDiscordRequest(req, res);
-  if (!isValid) {
-    return res.status(401).json({ error: 'Invalid request signature' });
-  }
-
-  // Parse the request body
-  const body = JSON.parse(req.body.toString());
-
-  // Handle Discord's verification challenge
-  if (body.type === 1) {
-    return res.json({ type: 1 });
-  }
-
-  // Handle commands
-  if (body.type === 2) {
-    const { data } = body;
-    
-    switch (data.name) {
-      case 'hello':
-        return res.json({
-          type: 4,
-          data: {
-            content: `Hello ${body.member.user.username}!`
-          }
-        });
-      
-      default:
-        return res.status(400).json({ error: 'Unknown command' });
-    }
-  }
-
-  return res.status(400).json({ error: 'Unknown type' });
-}
 
     
 
