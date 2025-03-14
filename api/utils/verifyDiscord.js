@@ -1,9 +1,9 @@
 const { verifyKey, InteractionType, InteractionResponseType } = require('discord-interactions');
 
 async function verifyDiscordRequest(req) {
-  const signature = req.headers['x-signature-ed25519'];
-  const timestamp = req.headers['x-signature-timestamp'];
-  const body = await req.text();
+  const signature = req.get['x-signature-ed25519'];
+  const timestamp = req.get['x-signature-timestamp'];
+  const body = await req.rawBody;
 
   const isValidRequest = verifyKey(
     body,
