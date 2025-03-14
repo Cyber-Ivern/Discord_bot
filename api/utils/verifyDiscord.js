@@ -1,43 +1,50 @@
-const { InteractionType } = require('discord-interactions');
-const verifyDiscordRequest = require('./utils/verifyDiscord');
-const handleCommand = require('./utils/commands');
+const { verifyKey, InteractionType, InteractionResponseType } = require('discord-interactions');
 
-module.exports = async (req, res) => {
-  // Log incoming request details (helpful for debugging)
-  console.log('Received request:', {
-    method: req.method,
-    headers: req.headers,
-    body: req.body
-  });
-
-  if (req.method !== 'POST') {
-    return res.status(405).send('Method not allowed');
-  }
-
+async function verifyDiscordRequest(req) {
   try {
-    const verification = await verifyDiscordRequest(req);
+    const signature = req.headers['x-signature-ed25519'];
+    const timestamp = req.headers['x-signature-timestamp'];
     
-    if (!verification.isValidRequest) {
-      return res.status(401).send('Invalid request signature');
+    if (!signature || !timestamp || !process.env.DISCORD_PUBLIC_KEY) {
+      console.error('Missing required headers or DISCORD_PUBLIC_KEY');
+      return { isValidRequest: false };
     }
 
-    // Handle Discord's verification challenge
-    if (verification.isPing) {
-      console.log('Responding to ping challenge');
-      return res.json(verification.response);
+    const rawBody = JSON.stringify(req.body);
+
+    const isValidRequest = verifyKey(
+      rawBody,
+      signature,
+      timestamp,
+      process.env.DISCORD_PUBLIC_KEY
+    );
+
+    if (!isValidRequest) {
+      console.error('Invalid request signature');
+      return { isValidRequest: false };
     }
 
-    // Handle commands
-    if (verification.message.type === InteractionType.APPLICATION_COMMAND) {
-      const response = handleCommand(verification.message);
-      return res.json(response);
+    // Handle Discord's ping-pong verification challenge
+    if (req.body.type === InteractionType.PING) {
+      return {
+        isValidRequest: true,
+        isPing: true,
+        response: {
+          type: InteractionResponseType.PONG
+        }
+      };
     }
 
-    return res.status(400).send('Unknown interaction type');
-  } catch (err) {
-    console.error('Error processing request:', err);
-    return res.status(500).json({ 
-      error: err.message || 'Internal server error'
-    });
+    // For normal commands
+    return {
+      isValidRequest: true,
+      isPing: false,
+      message: req.body
+    };
+  } catch (error) {
+    console.error('Error in verifyDiscordRequest:', error);
+    return { isValidRequest: false };
   }
-};
+}
+
+module.exports = verifyDiscordRequest; 
