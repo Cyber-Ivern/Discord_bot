@@ -8,10 +8,10 @@ const commands = {
     },
   }),
   // Add more commands here
-  time: (message) =>({
+  time: (message) => ({
     type: InteractionResponseType.CHANNEL_MESSAGE_WITH_SOURCE,
-    data:{
-      content: `the current date and time is ${new Date().toLocaleString()}`,
+    data: {
+      content: `The current date and time is ${new Date().toLocaleString()}`,
     },
   }),
 };
@@ -42,12 +42,6 @@ module.exports = {
       name: 'time',
       description: 'Responds with the current time',
       type: 1
-    },
-
-    {
-      name:'weather',
-      description: 'gives the weather forcast of a zip code',
-      type:1
     }
   ]
 }; 
