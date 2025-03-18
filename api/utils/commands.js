@@ -8,6 +8,12 @@ const commands = {
     },
   }),
   // Add more commands here
+  time: (message) =>({
+    type: InteractionResponseType.CHANNEL_MESSAGE_WITH_SOURCE,
+    data:{
+      content: `the current date and time is ${new Date().toLocaleString()}`,
+    },
+  }),
 };
 
 function handleCommand(message) {
@@ -30,7 +36,18 @@ module.exports = {
       name: 'hello',
       description: 'Says hello to the user',
       type: 1  // CHAT_INPUT type
-    }
+    },
     // Add more command definitions here
+    {
+      name: 'time',
+      description: 'Responds with the current time',
+      type: 1
+    },
+
+    {
+      name:'weather',
+      description: 'gives the weather forcast of a zip code',
+      type:1
+    }
   ]
 }; 
