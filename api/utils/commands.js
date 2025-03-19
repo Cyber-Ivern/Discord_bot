@@ -18,7 +18,7 @@ const commands = {
     try {
       console.log(`checkpoint 1`);
       // First, acknowledge the command immediately
-      
+      await interaction.response.defer();
     
     console.log(`checkpoint 2`);
     
