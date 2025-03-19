@@ -16,12 +16,15 @@ const commands = {
   }),
   weather: async (message) => {
     try {
-
-      console.log(`checkpoint 1`);
       // First, acknowledge the command immediately
-      await message.deferReply();
+      await fetch(`https://discord.com/api/v10/interactions/${message.id}/${message.token}/callback`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ type: 5 }) // DEFERRED_CHANNEL_MESSAGE_WITH_SOURCE
+    });
     
-    console.log(`checkpoint 2`);
+    
+    
 
       const zipCode = message.data.options[0].value;
       const apiKey = 'weatherApiKey'; // Move this to environment variables!
