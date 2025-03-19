@@ -17,11 +17,6 @@ const commands = {
   weather: async (interaction) => {
     try {
       console.log(`checkpoint 1`);
-      // First, acknowledge the command immediately
-      await interaction.response.defer();
-    
-      console.log(`checkpoint 2`);
-    
       const zipCode = interaction.data.options[0].value;
       const apiKey = 'weatherApiKey'; // Move this to environment variables!
 
@@ -30,43 +25,28 @@ const commands = {
         {timeout: 10000}
       );
 
-      
-
       const data = await response.json();
       
       if (data.cod !== 200) {
         return {
-          type: InteractionResponseType.UPDATE_MESSAGE,
+          type: InteractionResponseType.CHANNEL_MESSAGE_WITH_SOURCE,
           data: {
             content: 'Error: Invalid zip code or weather data unavailable.'
           }
         };
       }
 
-      
-
-      const weather = {
-        temp: Math.round(data.main.temp),
-        description: data.weather[0].description,
-        humidity: data.main.humidity,
-        windSpeed: Math.round(data.wind.speed),
-        city: data.name
-      };
-
       return {
-        type: InteractionResponseType.UPDATE_MESSAGE,
+        type: InteractionResponseType.CHANNEL_MESSAGE_WITH_SOURCE,
         data: {
-          content: `Weather in ${weather.city} (${zipCode}):\n` +
-                  `🌡️ Temperature: ${weather.temp}°F\n` +
-                  `🌥️ Conditions: ${weather.description}\n` +
-                  `💧 Humidity: ${weather.humidity}%\n` +
-                  `💨 Wind Speed: ${weather.windSpeed} mph`
+          content: `Weather in ${data.name}: ${data.main.temp}°F, ${data.weather[0].description}`
         }
       };
+
     } catch (error) {
       console.error('Error:', error);
       return {
-        type: InteractionResponseType.UPDATE_MESSAGE,
+        type: InteractionResponseType.CHANNEL_MESSAGE_WITH_SOURCE,
         data: {
           content: 'Sorry, there was an error fetching the weather data. Please try again.'
         }
