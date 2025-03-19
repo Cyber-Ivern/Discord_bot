@@ -20,7 +20,7 @@ const commands = {
       await message.deferReply();
 
       const zipCode = message.data.options[0].value;
-      const apiKey = 'your_api_key_here'; // Move this to environment variables!
+      const apiKey = 'weatherApiKey'; // Move this to environment variables!
 
       const response = await fetch(
         `https://api.openweathermap.org/data/2.5/weather?zip=${zipCode},us&units=imperial&appid=${apiKey}`
