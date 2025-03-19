@@ -16,6 +16,9 @@ const commands = {
   }),
   weather: async (message) => {
     try {
+      // First, acknowledge the command immediately
+      await message.deferReply();
+
       const zipCode = message.data.options[0].value;
       const apiKey = 'your_api_key_here'; // Move this to environment variables!
 
@@ -27,7 +30,7 @@ const commands = {
       
       if (data.cod !== 200) {
         return {
-          type: InteractionResponseType.CHANNEL_MESSAGE_WITH_SOURCE,
+          type: InteractionResponseType.UPDATE_MESSAGE,
           data: {
             content: 'Error: Invalid zip code or weather data unavailable.'
           }
@@ -43,7 +46,7 @@ const commands = {
       };
 
       return {
-        type: InteractionResponseType.CHANNEL_MESSAGE_WITH_SOURCE,
+        type: InteractionResponseType.UPDATE_MESSAGE,
         data: {
           content: `Weather in ${weather.city} (${zipCode}):\n` +
                   `🌡️ Temperature: ${weather.temp}°F\n` +
@@ -55,7 +58,7 @@ const commands = {
     } catch (error) {
       console.error('Error:', error);
       return {
-        type: InteractionResponseType.CHANNEL_MESSAGE_WITH_SOURCE,
+        type: InteractionResponseType.UPDATE_MESSAGE,
         data: {
           content: 'Sorry, there was an error fetching the weather data. Please try again.'
         }
