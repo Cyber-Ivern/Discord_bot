@@ -17,7 +17,13 @@ const commands = {
   weather: async (message) => {
     try {
       // First, acknowledge the command immediately
-      
+      await fetch(`https://discord.com/api/v10/interactions/${message.id}/${message.token}/callback`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+            type: InteractionResponseType.DEFERRED_CHANNEL_MESSAGE_WITH_SOURCE
+        })
+    });
 
       const zipCode = message.data.options[0].value;
       const apiKey = 'weatherApiKey'; // Move this to environment variables!
