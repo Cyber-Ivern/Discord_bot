@@ -14,16 +14,15 @@ const commands = {
       content: `The current date and time is ${new Date().toLocaleString()}`,
     },
   }),
-  weather: async (message) => {
+  weather: async (interaction) => {
     try {
       console.log(`checkpoint 1`);
       // First, acknowledge the command immediately
       await interaction.response.defer();
     
-    console.log(`checkpoint 2`);
+      console.log(`checkpoint 2`);
     
-
-      const zipCode = message.data.options[0].value;
+      const zipCode = interaction.data.options[0].value;
       const apiKey = 'weatherApiKey'; // Move this to environment variables!
 
       const response = await fetch(
