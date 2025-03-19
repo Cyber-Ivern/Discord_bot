@@ -23,8 +23,11 @@ const commands = {
       const apiKey = 'weatherApiKey'; // Move this to environment variables!
 
       const response = await fetch(
-        `https://api.openweathermap.org/data/2.5/weather?zip=${zipCode},us&units=imperial&appid=${apiKey}`
+        `https://api.openweathermap.org/data/2.5/weather?zip=${zipCode},us&units=imperial&appid=${apiKey}`,
+        {timeout: 10000}
       );
+
+      
 
       const data = await response.json();
       
@@ -36,6 +39,8 @@ const commands = {
           }
         };
       }
+
+      
 
       const weather = {
         temp: Math.round(data.main.temp),
