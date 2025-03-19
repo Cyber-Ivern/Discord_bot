@@ -17,7 +17,7 @@ const commands = {
   weather: async (message) => {
     try {
       // First, acknowledge the command immediately
-      await interaction.reply();
+      
 
       const zipCode = message.data.options[0].value;
       const apiKey = 'weatherApiKey'; // Move this to environment variables!
