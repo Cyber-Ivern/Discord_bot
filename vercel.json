@@ -8,7 +8,7 @@
     }
   ],
   "functions": {
-    "api/commands/*.js": {
+    "api/utils/*.js": {
       "memory": 1024,
       "maxDuration": 10
     }
