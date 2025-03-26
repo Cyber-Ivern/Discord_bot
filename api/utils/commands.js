@@ -85,15 +85,15 @@ async function handleCommand(message) {
     const initialResponse = result.initialResponse;
     
     // More detailed logging
-    console.log('Message details:', {
-      id: message.id,
-      application_id: message.application_id,
-      token: message.token,
-      type: message.type
-    });
+    console.log('Raw message:', message);
+    console.log('Application ID:', message.application_id);
+    console.log('Interaction Token:', message.token);
 
-    const followUpUrl = `https://discord.com/api/v10/webhooks/${message.application_id}/${message.token}`;
-    console.log('Follow-up URL:', followUpUrl);
+    // Get the raw interaction token from the message
+    const interactionToken = message.token.split(':')[0];
+    
+    const followUpUrl = `https://discord.com/api/v10/webhooks/${message.application_id}/${interactionToken}`;
+    console.log('Full followUpUrl:', followUpUrl);
     
     try {
       const followUpData = await result.followUp();
