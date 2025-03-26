@@ -64,7 +64,7 @@ const commands = {
   }
 };
 
-function handleCommand(message) {
+async function handleCommand(message) {
   const { name } = message.data;
   const commandHandler = commands[name];
   
@@ -72,7 +72,7 @@ function handleCommand(message) {
     throw new Error(`Unknown command: ${name}`);
   }
   
-  const result = commandHandler(message);
+  const result = await commandHandler(message);
 
   if (result.defer) {
     // First send the deferred response
