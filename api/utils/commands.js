@@ -18,7 +18,7 @@ const commands = {
   }),
   weather: async (message) => {
     try {
-      console.log('Message object:', message);
+      console.log('Starting weather command...');
       
       // Return an object that indicates we need deferral and includes the follow-up logic
       return {
@@ -30,30 +30,36 @@ const commands = {
           }
         },
         followUp: async () => {
+          console.log('Starting follow-up...');
           const zipCode = message.data.options[0].value;
           const apiKey = process.env.WEATHER_API_KEY;
 
+          console.log('Fetching weather data for zip:', zipCode);
           const response = await fetch(
             `https://api.openweathermap.org/data/2.5/weather?zip=${zipCode},us&units=imperial&appid=${apiKey}`,
             {timeout: 10000}
           );
 
           const data = await response.json();
+          console.log('Weather API response:', data);
           
           if (data.cod !== 200) {
+            console.log('Weather API error:', data);
             return {
               content: 'Error: Invalid zip code or weather data unavailable.'
             };
           }
 
-          return {
+          const result = {
             content: `Weather in ${data.name}: ${data.main.temp}°F, ${data.weather[0].description}`
           };
+          console.log('Sending follow-up response:', result);
+          return result;
         }
       };
 
     } catch (error) {
-      console.error('Error:', error);
+      console.error('Error in weather command:', error);
       return {
         type: InteractionResponseType.CHANNEL_MESSAGE_WITH_SOURCE,
         data: {
@@ -81,18 +87,25 @@ async function handleCommand(message) {
     // After sending deferred response, send the follow-up
     const followUpUrl = `https://discord.com/api/v10/webhooks/${process.env.DISCORD_APPLICATION_ID}/${message.token}`;
     
-    // Execute the follow-up after returning the initial response
-    result.followUp().then(followUpData => {
-      fetch(followUpUrl, {
+    try {
+      // Get the follow-up data
+      const followUpData = await result.followUp();
+      
+      // Send the follow-up message
+      const followUpResponse = await fetch(followUpUrl, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
         },
         body: JSON.stringify(followUpData),
       });
-    }).catch(error => {
+
+      if (!followUpResponse.ok) {
+        console.error('Failed to send follow-up:', await followUpResponse.text());
+      }
+    } catch (error) {
       console.error('Error in follow-up:', error);
-      fetch(followUpUrl, {
+      await fetch(followUpUrl, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -101,7 +114,7 @@ async function handleCommand(message) {
           content: 'An error occurred while fetching the weather data.'
         }),
       });
-    });
+    }
 
     return initialResponse;
   }
