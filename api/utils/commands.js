@@ -84,32 +84,40 @@ async function handleCommand(message) {
     // First send the deferred response
     const initialResponse = result.initialResponse;
     
-    // Use application_id from the message instead of environment variable
+    // More detailed logging
+    console.log('Message details:', {
+      id: message.id,
+      application_id: message.application_id,
+      token: message.token,
+      type: message.type
+    });
+
     const followUpUrl = `https://discord.com/api/v10/webhooks/${message.application_id}/${message.token}`;
+    console.log('Follow-up URL:', followUpUrl);
     
     try {
-      console.log('Follow-up URL:', followUpUrl); // Add logging to verify the URL
-      // Get the follow-up data
       const followUpData = await result.followUp();
+      console.log('Follow-up data:', followUpData);
       
-      // Send the follow-up message
       const followUpResponse = await fetch(followUpUrl, {
         method: 'POST',
         headers: {
-          'Content-Type': 'application/json',
+          'Content-Type': 'application/json'
         },
         body: JSON.stringify(followUpData),
       });
 
       if (!followUpResponse.ok) {
-        console.error('Failed to send follow-up:', await followUpResponse.text());
+        const errorText = await followUpResponse.text();
+        console.error('Failed to send follow-up:', errorText);
+        console.error('Response status:', followUpResponse.status);
       }
     } catch (error) {
       console.error('Error in follow-up:', error);
       await fetch(followUpUrl, {
         method: 'POST',
         headers: {
-          'Content-Type': 'application/json',
+          'Content-Type': 'application/json'
         },
         body: JSON.stringify({
           content: 'An error occurred while fetching the weather data.'
