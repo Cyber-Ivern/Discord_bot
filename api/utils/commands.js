@@ -84,10 +84,11 @@ async function handleCommand(message) {
     // First send the deferred response
     const initialResponse = result.initialResponse;
     
-    // After sending deferred response, send the follow-up
-    const followUpUrl = `https://discord.com/api/v10/webhooks/${process.env.DISCORD_CLIENT_ID}/${message.token}`;
+    // Use application_id from the message instead of environment variable
+    const followUpUrl = `https://discord.com/api/v10/webhooks/${message.application_id}/${message.token}`;
     
     try {
+      console.log('Follow-up URL:', followUpUrl); // Add logging to verify the URL
       // Get the follow-up data
       const followUpData = await result.followUp();
       
