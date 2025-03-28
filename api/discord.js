@@ -1,5 +1,5 @@
-const { verifyDiscordRequest } = require('./utils/verifyDiscord');
-const { handleCommand } = require('./utils/commands');
+import { verifyDiscordRequest } from './utils/verifyDiscord';
+import { handleCommand } from './utils/commands';
 
 export default async function handler(req, res) {
   if (req.method !== 'POST') {
