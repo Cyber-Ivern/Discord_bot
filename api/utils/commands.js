@@ -15,12 +15,16 @@ const commands = {
     };
   },
   // Add more commands here
-  time: (message) => ({
+  time: (message) => {
+    const theMessage = `The current date and time is ${new Date().toLocaleString()}`;
+    console.log(theMessage);
+    return {
     type: InteractionResponseType.CHANNEL_MESSAGE_WITH_SOURCE,
     data: {
-      content: `The current date and time is ${new Date().toLocaleString()}`,
+      content: theMessage,
     },
-  }),
+  }
+  },
   weather: async (message) => {
     try {
       console.log('Starting weather command...');
