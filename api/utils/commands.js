@@ -1,4 +1,6 @@
 const { InteractionResponseType } = require('discord-interactions');
+const { verifyKey } = require('discord-interactions');
+
 
 const commands = {
   hello: (message) => ({
@@ -16,58 +18,50 @@ const commands = {
   }),
   weather: async (message) => {
     try {
-      console.log(`checkpoint 1`);
-      // First, acknowledge the command immediately
-      await interaction.response.defer();
-    
-    console.log(`checkpoint 2`);
-    
-
-      const zipCode = message.data.options[0].value;
-      const apiKey = 'weatherApiKey'; // Move this to environment variables!
-
-      const response = await fetch(
-        `https://api.openweathermap.org/data/2.5/weather?zip=${zipCode},us&units=imperial&appid=${apiKey}`,
-        {timeout: 10000}
-      );
-
+      console.log('Starting weather command...');
       
-
-      const data = await response.json();
-      
-      if (data.cod !== 200) {
-        return {
-          type: InteractionResponseType.UPDATE_MESSAGE,
-          data: {
-            content: 'Error: Invalid zip code or weather data unavailable.'
-          }
-        };
-      }
-
-      
-
-      const weather = {
-        temp: Math.round(data.main.temp),
-        description: data.weather[0].description,
-        humidity: data.main.humidity,
-        windSpeed: Math.round(data.wind.speed),
-        city: data.name
-      };
-
+      // Return an object that indicates we need deferral and includes the follow-up logic
       return {
-        type: InteractionResponseType.UPDATE_MESSAGE,
-        data: {
-          content: `Weather in ${weather.city} (${zipCode}):\n` +
-                  `🌡️ Temperature: ${weather.temp}°F\n` +
-                  `🌥️ Conditions: ${weather.description}\n` +
-                  `💧 Humidity: ${weather.humidity}%\n` +
-                  `💨 Wind Speed: ${weather.windSpeed} mph`
+        defer: true,
+        initialResponse: {
+          type: InteractionResponseType.DEFERRED_CHANNEL_MESSAGE_WITH_SOURCE,
+          data: {
+            content: 'Fetching weather data...'
+          }
+        },
+        followUp: async () => {
+          console.log('Starting follow-up...');
+          const zipCode = message.data.options[0].value;
+          const apiKey = process.env.WEATHER_API_KEY;
+
+          console.log('Fetching weather data for zip:', zipCode);
+          const response = await fetch(
+            `https://api.openweathermap.org/data/2.5/weather?zip=${zipCode},us&units=imperial&appid=${apiKey}`,
+            {timeout: 10000}
+          );
+
+          const data = await response.json();
+          console.log('Weather API response:', data);
+          
+          if (data.cod !== 200) {
+            console.log('Weather API error:', data);
+            return {
+              content: 'Error: Invalid zip code or weather data unavailable.'
+            };
+          }
+
+          const result = {
+            content: `Weather in ${data.name}: ${data.main.temp}°F, ${data.weather[0].description}`
+          };
+          console.log('Sending follow-up response:', result);
+          return result;
         }
       };
+
     } catch (error) {
-      console.error('Error:', error);
+      console.error('Error in weather command:', error);
       return {
-        type: InteractionResponseType.UPDATE_MESSAGE,
+        type: InteractionResponseType.CHANNEL_MESSAGE_WITH_SOURCE,
         data: {
           content: 'Sorry, there was an error fetching the weather data. Please try again.'
         }
@@ -76,7 +70,7 @@ const commands = {
   }
 };
 
-function handleCommand(message) {
+async function handleCommand(message) {
   const { name } = message.data;
   const commandHandler = commands[name];
   
@@ -84,7 +78,68 @@ function handleCommand(message) {
     throw new Error(`Unknown command: ${name}`);
   }
   
-  return commandHandler(message);
+  const result = await commandHandler(message);
+
+  if (result.defer) {
+    // First send the deferred response
+    const initialResponse = result.initialResponse;
+    
+    // More detailed logging
+    console.log('Raw message:', message);
+    console.log('Application ID:', message.application_id);
+    console.log('Interaction Token:', message.token);
+
+    // Use the interactions endpoint for follow-up
+    const followUpUrl = `https://discord.com/api/v10/interactions/${message.id}/${message.token}/callback`;
+    console.log('Follow-up URL components:', {
+      baseUrl: 'https://discord.com/api/v10/interactions',
+      interactionId: message.id,
+      token: message.token
+    });
+    
+    try {
+      const followUpData = await result.followUp();
+      console.log('Follow-up data:', followUpData);
+      
+      const followUpResponse = await fetch(followUpUrl, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify({
+          type: InteractionResponseType.CHANNEL_MESSAGE_WITH_SOURCE,
+          data: followUpData
+        }),
+      });
+
+      if (!followUpResponse.ok) {
+        const errorText = await followUpResponse.text();
+        console.error('Failed to send follow-up:', errorText);
+        console.error('Response status:', followUpResponse.status);
+        console.error('Full URL attempted:', followUpUrl);
+      } else {
+        console.log('Follow-up sent successfully');
+      }
+    } catch (error) {
+      console.error('Error in follow-up:', error);
+      await fetch(followUpUrl, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify({
+          type: InteractionResponseType.CHANNEL_MESSAGE_WITH_SOURCE,
+          data: {
+            content: 'An error occurred while fetching the weather data.'
+          }
+        }),
+      });
+    }
+
+    return initialResponse;
+  }
+  
+  return result;
 }
 
 // Export the commands object for registration

@@ -6,5 +6,11 @@
       "methods": ["POST"],
       "dest": "/api/discord"
     }
-  ]
+  ],
+  "functions": {
+    "api/utils/*.js": {
+      "memory": 1024,
+      "maxDuration": 10
+    }
+  }
 }
