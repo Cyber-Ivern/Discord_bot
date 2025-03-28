@@ -3,12 +3,17 @@ const { verifyKey } = require('discord-interactions');
 
 
 const commands = {
-  hello: (message) => ({
-    type: InteractionResponseType.CHANNEL_MESSAGE_WITH_SOURCE,
-    data: {
-      content: `Hello ${message.member.user.username}!`,
-    },
-  }),
+  hello: (message) => {
+    const greeting = `Hello ${message.member.user.username}!`;
+    console.log(greeting);
+    return {
+      type: InteractionResponseType.CHANNEL_MESSAGE_WITH_SOURCE,
+      data: {
+        content: greeting,
+
+      },
+    };
+  },
   // Add more commands here
   time: (message) => ({
     type: InteractionResponseType.CHANNEL_MESSAGE_WITH_SOURCE,
