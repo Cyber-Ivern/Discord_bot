@@ -89,11 +89,13 @@ async function handleCommand(message) {
     console.log('Application ID:', message.application_id);
     console.log('Interaction Token:', message.token);
 
-    // Get the raw interaction token from the message
-    const interactionToken = message.token.split(':')[0];
-    
-    const followUpUrl = `https://discord.com/api/v10/webhooks/${message.application_id}/${interactionToken}`;
-    console.log('Full followUpUrl:', followUpUrl);
+    // Use the full token without splitting
+    const followUpUrl = `https://discord.com/api/v10/webhooks/${message.application_id}/${message.token}`;
+    console.log('Follow-up URL components:', {
+      baseUrl: 'https://discord.com/api/v10/webhooks',
+      appId: message.application_id,
+      token: message.token
+    });
     
     try {
       const followUpData = await result.followUp();
@@ -111,6 +113,9 @@ async function handleCommand(message) {
         const errorText = await followUpResponse.text();
         console.error('Failed to send follow-up:', errorText);
         console.error('Response status:', followUpResponse.status);
+        console.error('Full URL attempted:', followUpUrl);
+      } else {
+        console.log('Follow-up sent successfully');
       }
     } catch (error) {
       console.error('Error in follow-up:', error);
