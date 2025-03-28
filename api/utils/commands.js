@@ -89,11 +89,11 @@ async function handleCommand(message) {
     console.log('Application ID:', message.application_id);
     console.log('Interaction Token:', message.token);
 
-    // Use the full token without splitting
-    const followUpUrl = `https://discord.com/api/v10/webhooks/${message.application_id}/${message.token}`;
+    // Use the interactions endpoint for follow-up
+    const followUpUrl = `https://discord.com/api/v10/interactions/${message.id}/${message.token}/callback`;
     console.log('Follow-up URL components:', {
-      baseUrl: 'https://discord.com/api/v10/webhooks',
-      appId: message.application_id,
+      baseUrl: 'https://discord.com/api/v10/interactions',
+      interactionId: message.id,
       token: message.token
     });
     
@@ -106,7 +106,10 @@ async function handleCommand(message) {
         headers: {
           'Content-Type': 'application/json'
         },
-        body: JSON.stringify(followUpData),
+        body: JSON.stringify({
+          type: InteractionResponseType.CHANNEL_MESSAGE_WITH_SOURCE,
+          data: followUpData
+        }),
       });
 
       if (!followUpResponse.ok) {
@@ -125,7 +128,10 @@ async function handleCommand(message) {
           'Content-Type': 'application/json'
         },
         body: JSON.stringify({
-          content: 'An error occurred while fetching the weather data.'
+          type: InteractionResponseType.CHANNEL_MESSAGE_WITH_SOURCE,
+          data: {
+            content: 'An error occurred while fetching the weather data.'
+          }
         }),
       });
     }
